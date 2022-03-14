@@ -31,6 +31,26 @@ contract SunkCost {
     uint256 private nGames = 0;
 
     address public constant BURN_ADDRESS = "vite_0000000000000000000000000000000000000000a4f3a0cb58";
+    
+    // Comment these lines to disable the time hack
+    //=====
+    uint256 internal _currentTime = 0;
+
+    function setTime(uint256 _time) external {
+        _currentTime = _time;
+    }
+
+    function _getTime() internal view returns (uint256) {
+        return _currentTime;
+    }
+    //=====
+
+    // Uncomment these lines to disable the time hack
+    //=====
+    //function _getTime() internal view returns (uint256) {
+    //    return block.timestamp;
+    //}
+    //=====
 
     // ==Getters==
 
@@ -83,7 +103,7 @@ contract SunkCost {
     /// @param _gameId The id of the game to check
     function expired(uint256 _gameId) external view returns (bool) {
         require(exists(_gameId), "Game does not exist");
-        return games[_gameId].expiration < block.timestamp;
+        return games[_gameId].expiration < _getTime();
     }
 
     /// @notice Returns the initial buy-in amount of the game with the given id
@@ -166,7 +186,7 @@ contract SunkCost {
     /// @param _burnAmount The amount burned with each buy-in of the game
     /// @param _extension The added time with each buy-in of the game
     function createGame(vitetoken _tokenId, uint256 _expiration, uint256 _maxExpiration, uint256 _initialBuyIn, uint256 _buyInIncrement, uint256 _burnAmount, uint256 _extension) external payable {
-        require(_expiration > block.timestamp, "Game cannot end in the past");
+        require(_expiration > _getTime(), "Game cannot end in the past");
         require(msg.token == _tokenId, "Token ID mismatch");
         require(msg.value == _initialBuyIn, "Transaction value should cover initial buy-in");
         require(_maxExpiration >= _expiration, "Max expiration must be greater than or equal to expiration");
@@ -200,7 +220,7 @@ contract SunkCost {
     /// @param _gameId The id of the game
     function buyIn(uint256 _gameId) external payable {
         require(exists(_gameId), "Game does not exist");
-        require(games[_gameId].expiration > block.timestamp, "Game is expired");
+        require(games[_gameId].expiration > _getTime(), "Game is expired");
         require(msg.token == games[_gameId].tokenId, "Token ID mismatch");
 
         uint256 gameBuyIn = games[_gameId].currentBuyIn;
@@ -241,7 +261,7 @@ contract SunkCost {
     /// @param _gameId The id of the game
     function claimReward(uint256 _gameId) external {
         require(exists(_gameId), "Game does not exist");
-        require(games[_gameId].expiration <= block.timestamp, "Game is not over yet");
+        require(games[_gameId].expiration < _getTime(), "Game is not over yet");
         require(msg.sender == games[_gameId].currentWinner, "Sender must be winner");
         require(!games[_gameId].claimed, "Reward has already been claimed");
 
