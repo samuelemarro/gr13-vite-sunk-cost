@@ -23,6 +23,8 @@ contract SunkCost {
     mapping(uint256 => Game) public games;
     uint256 private nGames = 0;
 
+    address public constant BURN_ADDRESS = "vite_00000000000000000000000000000000000000000000000000";
+
     // ==Getters==
 
     function numGames() public view returns (uint256) {
@@ -88,6 +90,10 @@ contract SunkCost {
         return games[_gameId].claimed;
     }
 
+    function _burn(vitetoken _tokenId, uint256 _amount) internal {
+        payable(BURN_ADDRESS).transfer(_tokenId, _amount);
+    }
+
     // ==Game Management==
 
     function createGame(vitetoken _tokenId, uint256 _expiration, uint256 _initialBuyIn, uint256 _buyInIncrement, uint256 _burnAmount, uint256 _extension) external payable {
@@ -109,7 +115,9 @@ contract SunkCost {
         // games[gameId].claimed = false;
         nGames++;
 
-        // TODO: burnAmount
+        if (_burnAmount > 0) {
+            _burn(_tokenId, _burnAmount);
+        }
     }
 
     function buy(uint256 _gameId) public payable {
@@ -123,7 +131,10 @@ contract SunkCost {
 
         // TODO: Handle frontrunning
 
-        // TODO: burnAmount
+        uint256 gameBurnAmount = games[_gameId].burnAmount;
+        if (gameBurnAmount > 0) {
+            _burn(games[_gameId].tokenId, gameBurnAmount);
+        }
         games[_gameId].expiration += games[_gameId].extension;
 
         games[_gameId].currentWinner = msg.sender;
