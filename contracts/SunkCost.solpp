@@ -149,7 +149,8 @@ contract SunkCost {
 
         uint256 gameBuyIn = games[_gameId].currentBuyIn;
 
-        require(msg.value == gameBuyIn, "Transaction value should cover current buy-in");
+        // Note: can be greater than gameBuyIn
+        require(msg.value >= gameBuyIn, "Transaction value should cover current buy-in");
 
         uint256 gameBurnAmount = games[_gameId].burnAmount;
         uint256 refund = msg.value - gameBuyIn;
