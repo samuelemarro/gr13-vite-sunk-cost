@@ -295,5 +295,38 @@ describe('test SunkCost', function () {
                 contract.call('createGame', ['tti_5649544520544f4b454e6e40', '1899673200', '2215292400', '2000', '100', '25', '1000'], {caller: alice, amount: '1999'})
             ).to.eventually.be.rejectedWith('revert');
         });
+
+        it.only('fails to pay a createGame call with the wrong token', async function() {
+            await deployer.sendToken(alice.address, '1000000');
+            await alice.receiveAll();
+
+            // 1899673200 = March 14, 2030
+            // 2215292400 = March 14, 2040
+            expect(
+                contract.call('createGame', ['tti_5649544520544f4b454e6e41', '1899673200', '2215292400', '2000', '100', '25', '1000'], {caller: alice, amount: '2000'})
+            ).to.eventually.be.rejectedWith('revert');
+        });
+
+        it.only('fails to create a game in the past', async function() {
+            await deployer.sendToken(alice.address, '1000000');
+            await alice.receiveAll();
+
+            // 1 = January 1, 1970 00:00:01
+            // 2215292400 = March 14, 2040
+            expect(
+                contract.call('createGame', ['tti_5649544520544f4b454e6e40', '1', '2215292400', '2000', '100', '25', '1000'], {caller: alice, amount: '2000'})
+            ).to.eventually.be.rejectedWith('revert');
+        });
+
+        it.only('fails to create a game with maxExpiration < expiration', async function() {
+            await deployer.sendToken(alice.address, '1000000');
+            await alice.receiveAll();
+
+            // 2215292400 = March 14, 2040
+            // 1899673200 = March 14, 2030
+            expect(
+                contract.call('createGame', ['tti_5649544520544f4b454e6e40', '2215292400', '1899673200', '2000', '100', '25', '1000'], {caller: alice, amount: '2000'})
+            ).to.eventually.be.rejectedWith('revert');
+        });
     });
 });
