@@ -330,7 +330,6 @@ describe('test SunkCost', function () {
             await deployer.sendToken(alice.address, '1000000');
             await alice.receiveAll();
 
-            // Timestamp starts at 0 with vuilder
             await contract.call('setTime', ['1000'], {caller: alice});
 
             // 1 = January 1, 1970 00:00:01
@@ -606,7 +605,7 @@ describe('test SunkCost', function () {
             ).to.eventually.be.rejectedWith('revert');
         });
 
-        it.only('causes a buy-in to reach the maximum expiration', async function() {
+        it('causes a buy-in to reach the maximum expiration', async function() {
             await deployer.sendToken(alice.address, '1000000');
             await alice.receiveAll();
 
@@ -759,6 +758,50 @@ describe('test SunkCost', function () {
 
             // Less than the new expiration time (16000), so the game is still in progress
             await contract.call('setTime', ['15999'], {caller: alice});
+
+            expect(
+                contract.call('claimReward', ['0'], {caller: bob})
+            ).to.be.eventually.rejectedWith('revert');
+        });
+
+        it('fails to claim the reward of a game that was not won', async function() {
+            await deployer.sendToken(alice.address, '1000000');
+            await alice.receiveAll();
+
+            await deployer.sendToken(bob.address, '1000000');
+            await bob.receiveAll();
+
+            await contract.call('setTime', ['0'], {caller: alice});
+
+            await contract.call('createGame', ['tti_5649544520544f4b454e6e40', '15000', '18000', '2000', '100', '25', '1000'], {caller: alice, amount: '2000'});
+            
+            await contract.call('buyIn', ['0'], {caller: bob, amount: '2100'});
+            await contract.call('setTime', ['16001'], {caller: alice});
+
+            // Alice is not the winner
+            expect(
+                contract.call('claimReward', ['0'], {caller: alice})
+            ).to.be.eventually.rejectedWith('revert');
+        });
+
+        it('fails to claim a reward twice', async function() {
+            await deployer.sendToken(alice.address, '1000000');
+            await alice.receiveAll();
+
+            await deployer.sendToken(bob.address, '1000000');
+            await bob.receiveAll();
+
+            await contract.call('setTime', ['0'], {caller: alice});
+
+            await contract.call('createGame', ['tti_5649544520544f4b454e6e40', '15000', '18000', '2000', '100', '25', '1000'], {caller: alice, amount: '2000'});
+
+            await contract.call('buyIn', ['0'], {caller: bob, amount: '2100'});
+
+            // Game expires, time to claim the reward
+            await contract.call('setTime', ['16001'], {caller: alice});
+
+            await contract.call('claimReward', ['0'], {caller: bob});
+            await bob.receiveAll();
 
             expect(
                 contract.call('claimReward', ['0'], {caller: bob})
