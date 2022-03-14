@@ -140,6 +140,7 @@ contract SunkCost {
         }
 
         emit GameCreated(gameId, msg.sender);
+        emit BuyIn(gameId, msg.sender, _initialBuyIn);
     }
 
     function buyIn(uint256 _gameId) external payable {

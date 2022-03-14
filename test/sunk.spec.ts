@@ -187,9 +187,15 @@ describe('test SunkCost', function () {
 
             const events = await contract.getPastEvents('allEvents', {fromHeight: 0, toHeight: 100});
             checkEvents(events, [
-                { '0': '0', gameId: '0',
-                  '1': alice.address, creator: alice.address
-                } // Game created
+                { 
+                    '0': '0', gameId: '0',
+                    '1': alice.address, creator: alice.address
+                }, // Game created
+                {
+                    '0': '0', gameId: '0',
+                    '1': alice.address, player: alice.address,
+                    '2': '2000', amount: '2000',
+                } // Buy-in by Alice
             ]);
         });
 
@@ -268,9 +274,19 @@ describe('test SunkCost', function () {
                 { '0': '0', gameId: '0',
                   '1': alice.address, creator: alice.address
                 }, // Game created by Alice
+                {
+                    '0': '0', gameId: '0',
+                    '1': alice.address, player: alice.address,
+                    '2': '2000', amount: '2000',
+                }, // Buy-in by Alice
                 { '0': '1', gameId: '1',
                   '1': bob.address, creator: bob.address
-                } // Game created by Bob
+                }, // Game created by Bob
+                {
+                    '0': '1', gameId: '1',
+                    '1': bob.address, player: bob.address,
+                    '2': '4000', amount: '4000',
+                } // Buy-in by Alice
             ]);
         });
 
@@ -383,13 +399,18 @@ describe('test SunkCost', function () {
                 }, // Game created
                 {
                     '0': '0', gameId: '0',
+                    '1': alice.address, player: alice.address,
+                    '2': '2000', amount: '2000',
+                }, // Buy-in by Alice
+                {
+                    '0': '0', gameId: '0',
                     '1': bob.address, player: bob.address,
                     '2': '2100', amount: '2100',
                 } // Buy-in by Bob
             ]);
         });
 
-        it.only('buys in twice', async function() {
+        it('buys in twice', async function() {
             await deployer.sendToken(alice.address, '1000000');
             await alice.receiveAll();
 
@@ -437,6 +458,11 @@ describe('test SunkCost', function () {
                     '0': '0', gameId: '0',
                     '1': alice.address, creator: alice.address
                 }, // Game created by Alice
+                {
+                    '0': '0', gameId: '0',
+                    '1': alice.address, player: alice.address,
+                    '2': '2000', amount: '2000',
+                }, // Buy-in by Alice
                 {
                     '0': '0', gameId: '0',
                     '1': bob.address, player: bob.address,
@@ -500,6 +526,11 @@ describe('test SunkCost', function () {
                     '0': '0', gameId: '0',
                     '1': alice.address, creator: alice.address
                 }, // Game created
+                {
+                    '0': '0', gameId: '0',
+                    '1': alice.address, player: alice.address,
+                    '2': '2000', amount: '2000',
+                }, // Buy-in by Alice
                 {
                     '0': '0', gameId: '0',
                     '1': bob.address, player: bob.address,
