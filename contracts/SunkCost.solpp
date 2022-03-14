@@ -5,6 +5,8 @@
 pragma soliditypp ^0.8.0;
 
 struct Game {
+    address creator;
+
     vitetoken tokenId;
     uint256 expiration;
     uint256 initialBuyIn;
@@ -20,6 +22,10 @@ struct Game {
 }
 
 contract SunkCost {
+    event GameCreated(uint256 indexed gameId, address indexed creator);
+    event BuyIn(uint256 indexed gameId, address indexed player, uint256 amount);
+    event RewardCollected(uint256 indexed gameId, address indexed player, uint256 amount);
+
     mapping(uint256 => Game) public games;
     uint256 private nGames = 0;
 
@@ -33,6 +39,10 @@ contract SunkCost {
 
     function exists(uint256 _gameId) public view returns (bool) {
         return _gameId < nGames;
+    }
+
+    function creator(uint256 _gameId) external view returns (address) {
+        return games[_gameId].creator;
     }
 
     function tokenId(uint256 _gameId) external view returns (vitetoken) {
@@ -103,6 +113,7 @@ contract SunkCost {
 
         uint256 gameId = nGames;
 
+        games[gameId].creator = msg.sender;
         games[gameId].tokenId = _tokenId;
         games[gameId].expiration = _expiration;
         games[gameId].initialBuyIn = _initialBuyIn;
@@ -118,9 +129,11 @@ contract SunkCost {
         if (_burnAmount > 0) {
             _burn(_tokenId, _burnAmount);
         }
+
+        emit GameCreated(gameId, msg.sender);
     }
 
-    function buy(uint256 _gameId) public payable {
+    function buyIn(uint256 _gameId) external payable {
         require(exists(_gameId), "Game does not exist");
         require(games[_gameId].expiration > block.timestamp, "Game is expired");
         require(msg.token == games[_gameId].tokenId, "Token ID mismatch");
@@ -138,15 +151,20 @@ contract SunkCost {
         games[_gameId].expiration += games[_gameId].extension;
 
         games[_gameId].currentWinner = msg.sender;
+
+        emit BuyIn(_gameId, msg.sender, games[_gameId].currentBuyIn);
     }
 
-    function claimReward(uint256 _gameId) public {
+    function claimReward(uint256 _gameId) external {
         require(exists(_gameId), "Game does not exist");
         require(games[_gameId].expiration <= block.timestamp, "Game is not over yet");
         require(msg.sender == games[_gameId].currentWinner, "Sender must be winner");
         require(!games[_gameId].claimed, "Reward has already been claimed");
 
-        payable(msg.sender).transfer(games[_gameId].tokenId, games[_gameId].currentPot);
         games[_gameId].claimed = true;
+
+        payable(msg.sender).transfer(games[_gameId].tokenId, games[_gameId].currentPot);
+
+        emit RewardCollected(_gameId, msg.sender, games[_gameId].currentPot);
     }
 }
