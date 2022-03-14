@@ -148,7 +148,7 @@ describe('test SunkCost', function () {
         });
     });
 
-    describe.only('createGame', function() {
+    describe('createGame', function() {
         it('creates a game', async function() {
             await deployer.sendToken(alice.address, '1000000');
             await alice.receiveAll();
@@ -272,6 +272,28 @@ describe('test SunkCost', function () {
                   '1': bob.address, creator: bob.address
                 } // Game created by Bob
             ]);
+        });
+
+        it('fails to overpay a createGame call', async function() {
+            await deployer.sendToken(alice.address, '1000000');
+            await alice.receiveAll();
+
+            // 1899673200 = March 14, 2030
+            // 2215292400 = March 14, 2040
+            expect(
+                contract.call('createGame', ['tti_5649544520544f4b454e6e40', '1899673200', '2215292400', '2000', '100', '25', '1000'], {caller: alice, amount: '2001'})
+            ).to.eventually.be.rejectedWith('revert');
+        });
+
+        it('fails to underpay a createGame call', async function() {
+            await deployer.sendToken(alice.address, '1000000');
+            await alice.receiveAll();
+
+            // 1899673200 = March 14, 2030
+            // 2215292400 = March 14, 2040
+            expect(
+                contract.call('createGame', ['tti_5649544520544f4b454e6e40', '1899673200', '2215292400', '2000', '100', '25', '1000'], {caller: alice, amount: '1999'})
+            ).to.eventually.be.rejectedWith('revert');
         });
     });
 });
