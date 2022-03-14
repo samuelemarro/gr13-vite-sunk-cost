@@ -42,6 +42,9 @@ describe('test SunkCost', function () {
         contract.setDeployer(deployer).setProvider(provider);
         await contract.deploy({params: [], responseLatency: 1});
         expect(contract.address).to.be.a('string');
+
+        // set time
+        await contract.call('setTime', ['0'], {caller: alice});
     });
 
     describe('creator', function () {
