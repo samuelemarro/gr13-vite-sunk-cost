@@ -3,5 +3,5 @@
     "spec": "./test/**/*.spec.ts",
     "require": "ts-node/register, ./test/fixture.nightly.ts",
     "slow": 10000,
-    "timeout": 120000
+    "timeout": 240000
   }
