@@ -9,6 +9,7 @@ struct Game {
 
     vitetoken tokenId;
     uint256 expiration;
+    uint256 maxExpiration;
     uint256 initialBuyIn;
     uint256 currentBuyIn;
     uint256 currentPot;
@@ -53,6 +54,11 @@ contract SunkCost {
     function expiration(uint256 _gameId) external view returns (uint256) {
         require(exists(_gameId), "Game does not exist");
         return games[_gameId].expiration;
+    }
+
+    function maxExpiration(uint256 _gameId) external view returns (uint256) {
+        require(exists(_gameId), "Game does not exist");
+        return games[_gameId].maxExpiration;
     }
 
     function expired(uint256 _gameId) external view returns (bool) {
@@ -106,16 +112,18 @@ contract SunkCost {
 
     // ==Game Management==
 
-    function createGame(vitetoken _tokenId, uint256 _expiration, uint256 _initialBuyIn, uint256 _buyInIncrement, uint256 _burnAmount, uint256 _extension) external payable {
+    function createGame(vitetoken _tokenId, uint256 _expiration, uint256 _maxExpiration, uint256 _initialBuyIn, uint256 _buyInIncrement, uint256 _burnAmount, uint256 _extension) external payable {
         require(_expiration > block.timestamp, "Game cannot end in the past");
         require(msg.token == _tokenId, "Token ID mismatch");
         require(msg.value == _initialBuyIn, "Transaction value should cover initial buy-in");
+        require(_maxExpiration >= _expiration, "Max expiration must be greater than or equal to expiration");
 
         uint256 gameId = nGames;
 
         games[gameId].creator = msg.sender;
         games[gameId].tokenId = _tokenId;
         games[gameId].expiration = _expiration;
+        games[gameId].maxExpiration = _maxExpiration;
         games[gameId].initialBuyIn = _initialBuyIn;
         games[gameId].currentBuyIn = _initialBuyIn + _buyInIncrement;
         // games[gameId].currentPot = 0;
@@ -149,7 +157,13 @@ contract SunkCost {
             _burn(games[_gameId].tokenId, gameBurnAmount);
         }
 
-        games[_gameId].expiration += games[_gameId].extension;
+        uint256 newExpiration = games[_gameId].expiration + games[_gameId].extension;
+
+        if (newExpiration > games[_gameId].maxExpiration) {
+            newExpiration = games[_gameId].maxExpiration;
+        }
+
+        games[_gameId].expiration = newExpiration;
 
         games[_gameId].currentWinner = msg.sender;
 
