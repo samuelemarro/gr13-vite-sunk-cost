@@ -168,6 +168,7 @@ describe('test SunkCost', function () {
             expect(await contract.query('tokenId', [0], {caller: alice})).to.be.deep.equal(['tti_5649544520544f4b454e6e40']);
             expect(await contract.query('expiration', [0], {caller: alice})).to.be.deep.equal(['1899673200']);
             expect(await contract.query('maxExpiration', [0], {caller: alice})).to.be.deep.equal(['2215292400']);
+            expect(await contract.query('expired', [0], {caller: bob})).to.be.deep.equal(['0']);
             expect(await contract.query('initialBuyIn', [0], {caller: alice})).to.be.deep.equal(['2000']);
 
             // 2000 + 100 = 2100
@@ -229,6 +230,7 @@ describe('test SunkCost', function () {
             expect(await contract.query('tokenId', [0], {caller: alice})).to.be.deep.equal(['tti_5649544520544f4b454e6e40']);
             expect(await contract.query('expiration', [0], {caller: alice})).to.be.deep.equal(['1899673200']);
             expect(await contract.query('maxExpiration', [0], {caller: alice})).to.be.deep.equal(['2215292400']);
+            expect(await contract.query('expired', [0], {caller: bob})).to.be.deep.equal(['0']);
             expect(await contract.query('initialBuyIn', [0], {caller: alice})).to.be.deep.equal(['2000']);
 
             // 2000 + 100 = 2100
@@ -255,6 +257,7 @@ describe('test SunkCost', function () {
             expect(await contract.query('tokenId', [1], {caller: bob})).to.be.deep.equal(['tti_5649544520544f4b454e6e40']);
             expect(await contract.query('expiration', [1], {caller: bob})).to.be.deep.equal(['1899673201']);
             expect(await contract.query('maxExpiration', [1], {caller: bob})).to.be.deep.equal(['2215292401']);
+            expect(await contract.query('expired', [1], {caller: bob})).to.be.deep.equal(['0']);
             expect(await contract.query('initialBuyIn', [1], {caller: bob})).to.be.deep.equal(['4000']);
 
             // 4000 + 200 = 4200
@@ -327,8 +330,8 @@ describe('test SunkCost', function () {
             await deployer.sendToken(alice.address, '1000000');
             await alice.receiveAll();
 
-            // Timestamp starts at 0 with vuilter
-            vite.utils.sleep(1000);
+            // Timestamp starts at 0 with vuilder
+            await contract.call('setTime', ['1000'], {caller: alice});
 
             // 1 = January 1, 1970 00:00:01
             // 2215292400 = March 14, 2040
@@ -375,6 +378,7 @@ describe('test SunkCost', function () {
             // 1899673200 + 1000 = 1899674200
             expect(await contract.query('expiration', [0], {caller: bob})).to.be.deep.equal(['1899674200']);
             expect(await contract.query('maxExpiration', [0], {caller: bob})).to.be.deep.equal(['2215292400']);
+            expect(await contract.query('expired', [0], {caller: bob})).to.be.deep.equal(['0']);
             expect(await contract.query('initialBuyIn', [0], {caller: bob})).to.be.deep.equal(['2000']);
 
             // 2000 + 100 + 100 = 2200
@@ -436,6 +440,7 @@ describe('test SunkCost', function () {
             // 1899673200 + 1000 = 1899674200
             expect(await contract.query('expiration', [0], {caller: bob})).to.be.deep.equal(['1899675200']);
             expect(await contract.query('maxExpiration', [0], {caller: bob})).to.be.deep.equal(['2215292400']);
+            expect(await contract.query('expired', [0], {caller: bob})).to.be.deep.equal(['0']);
             expect(await contract.query('initialBuyIn', [0], {caller: bob})).to.be.deep.equal(['2000']);
 
             // 2000 + 100 + 100 = 2200
@@ -504,6 +509,7 @@ describe('test SunkCost', function () {
             // 1899673200 + 1000 = 1899674200
             expect(await contract.query('expiration', [0], {caller: bob})).to.be.deep.equal(['1899674200']);
             expect(await contract.query('maxExpiration', [0], {caller: bob})).to.be.deep.equal(['2215292400']);
+            expect(await contract.query('expired', [0], {caller: bob})).to.be.deep.equal(['0']);
             expect(await contract.query('initialBuyIn', [0], {caller: bob})).to.be.deep.equal(['2000']);
 
             // 2000 + 100 + 100 = 2200
@@ -555,14 +561,11 @@ describe('test SunkCost', function () {
             await deployer.sendToken(bob.address, '1000000');
             await bob.receiveAll();
 
-            // 1000000 = 1000 seconds from now
+            await contract.call('setTime', ['0'], {caller: alice});
 
-            // TODO: compute timestamp
-            const currentTimestamp = 0;
+            await contract.call('createGame', ['tti_5649544520544f4b454e6e40', '15000', '16000', '2000', '100', '25', '1000'], {caller: alice, amount: '2000'});
 
-            await contract.call('createGame', ['tti_5649544520544f4b454e6e40', currentTimestamp + 5000, currentTimestamp + 20000, '2000', '100', '25', '1000'], {caller: alice, amount: '2000'});
-
-            vite.utils.sleep(6000);
+            await contract.call('setTime', ['15026'], {caller: alice});
 
             expect(
                 contract.call('buyIn', ['0'], {caller: bob, amount: '2100'})
@@ -601,6 +604,165 @@ describe('test SunkCost', function () {
             expect(
                 contract.call('buyIn', ['0'], {caller: bob, amount: '2099'})
             ).to.eventually.be.rejectedWith('revert');
+        });
+
+        it.only('causes a buy-in to reach the maximum expiration', async function() {
+            await deployer.sendToken(alice.address, '1000000');
+            await alice.receiveAll();
+
+            await deployer.sendToken(bob.address, '1000000');
+            await bob.receiveAll();
+
+            await contract.call('setTime', ['0'], {caller: alice});
+
+            // 1899673200 = March 14, 2030
+            // 1899673250 = March 14, 2040 00:00:50
+            await contract.call('createGame', ['tti_5649544520544f4b454e6e40', '1899673200', '1899673250', '2000', '100', '25', '1000'], {caller: alice, amount: '2000'});
+            console.log('Pippo')
+            await contract.call('buyIn', ['0'], {caller: bob, amount: '2100'});
+
+            // Other than the expiration, everything should be the same
+
+            // 1000000 - 2100 = 997900
+            expect(await bob.balance()).to.be.deep.equal('997900');
+
+            expect(await contract.query('numGames', [], {caller: bob})).to.be.deep.equal(['1']);
+
+            expect(await contract.query('creator', [0], {caller: bob})).to.be.deep.equal([alice.address]);
+            expect(await contract.query('exists', [0])).to.be.deep.equal(['1']);
+
+            expect(await contract.query('tokenId', [0], {caller: bob})).to.be.deep.equal(['tti_5649544520544f4b454e6e40']);
+            // 1899673200 + 1000 > maxExpiration, so it becomes maxExpiration
+            expect(await contract.query('expiration', [0], {caller: bob})).to.be.deep.equal(['1899673250']);
+            expect(await contract.query('maxExpiration', [0], {caller: bob})).to.be.deep.equal(['1899673250']);
+            expect(await contract.query('expired', [0], {caller: bob})).to.be.deep.equal(['0']);
+            expect(await contract.query('initialBuyIn', [0], {caller: bob})).to.be.deep.equal(['2000']);
+
+            // 2000 + 100 + 100 = 2200
+            expect(await contract.query('currentBuyIn', [0], {caller: bob})).to.be.deep.equal(['2200']);
+
+            // 2000 added - 25 burned + 2100 added - 25 burned = 4050
+            expect(await contract.query('currentPot', [0], {caller: bob})).to.be.deep.equal(['4050']);
+            // Balance must match currentPot
+            expect(await contract.balance()).to.be.deep.equal('4050');
+
+            expect(await contract.query('buyInIncrement', [0], {caller: bob})).to.be.deep.equal(['100']);
+            expect(await contract.query('burnAmount', [0], {caller: bob})).to.be.deep.equal(['25']);
+            expect(await contract.query('extension', [0], {caller: bob})).to.be.deep.equal(['1000']);
+            expect(await contract.query('currentWinner', [0], {caller: bob})).to.be.deep.equal([bob.address]);
+            expect(await contract.query('claimed', [0], {caller: bob})).to.be.deep.equal(['0']);
+
+            const events = await contract.getPastEvents('allEvents', {fromHeight: 0, toHeight: 100});
+            checkEvents(events, [
+                { 
+                    '0': '0', gameId: '0',
+                    '1': alice.address, creator: alice.address
+                }, // Game created
+                {
+                    '0': '0', gameId: '0',
+                    '1': alice.address, player: alice.address,
+                    '2': '2000', amount: '2000',
+                }, // Buy-in by Alice
+                {
+                    '0': '0', gameId: '0',
+                    '1': bob.address, player: bob.address,
+                    '2': '2100', amount: '2100',
+                } // Buy-in by Bob
+            ]);
+        });
+    });
+
+    describe('claimReward', function () {
+        it('claims a reward', async function() {
+            await deployer.sendToken(alice.address, '1000000');
+            await alice.receiveAll();
+
+            await deployer.sendToken(bob.address, '1000000');
+            await bob.receiveAll();
+
+            await contract.call('setTime', ['0'], {caller: alice});
+
+            await contract.call('createGame', ['tti_5649544520544f4b454e6e40', '15000', '18000', '2000', '100', '25', '1000'], {caller: alice, amount: '2000'});
+
+            await contract.call('buyIn', ['0'], {caller: bob, amount: '2100'});
+
+            // Game expires, time to claim the reward
+            await contract.call('setTime', ['16001'], {caller: alice});
+
+            await contract.call('claimReward', ['0'], {caller: bob});
+            await bob.receiveAll();
+
+            // 1000000 - 2100 (buy-in) + 4050 (pot) = 1001950
+            expect(await bob.balance()).to.be.deep.equal('1001950');
+            expect(await contract.balance()).to.be.deep.equal('0');
+
+            expect(await contract.query('numGames', [], {caller: bob})).to.be.deep.equal(['1']);
+
+            expect(await contract.query('creator', [0], {caller: bob})).to.be.deep.equal([alice.address]);
+            expect(await contract.query('exists', [0])).to.be.deep.equal(['1']);
+
+            expect(await contract.query('tokenId', [0], {caller: bob})).to.be.deep.equal(['tti_5649544520544f4b454e6e40']);
+            // 1899673200 + 1000 = 1899674200
+            expect(await contract.query('expiration', [0], {caller: bob})).to.be.deep.equal(['16000']);
+            expect(await contract.query('maxExpiration', [0], {caller: bob})).to.be.deep.equal(['18000']);
+            expect(await contract.query('expired', [0], {caller: bob})).to.be.deep.equal(['1']);
+            expect(await contract.query('initialBuyIn', [0], {caller: bob})).to.be.deep.equal(['2000']);
+
+            // 2000 + 100 + 100 = 2200
+            expect(await contract.query('currentBuyIn', [0], {caller: bob})).to.be.deep.equal(['2200']);
+
+            // 2000 added - 25 burned + 2100 added - 25 burned = 4050
+            expect(await contract.query('currentPot', [0], {caller: bob})).to.be.deep.equal(['4050']);
+
+            expect(await contract.query('buyInIncrement', [0], {caller: bob})).to.be.deep.equal(['100']);
+            expect(await contract.query('burnAmount', [0], {caller: bob})).to.be.deep.equal(['25']);
+            expect(await contract.query('extension', [0], {caller: bob})).to.be.deep.equal(['1000']);
+            expect(await contract.query('currentWinner', [0], {caller: bob})).to.be.deep.equal([bob.address]);
+            expect(await contract.query('claimed', [0], {caller: bob})).to.be.deep.equal(['1']);
+
+            const events = await contract.getPastEvents('allEvents', {fromHeight: 0, toHeight: 100});
+            checkEvents(events, [
+                { 
+                    '0': '0', gameId: '0',
+                    '1': alice.address, creator: alice.address
+                }, // Game created
+                {
+                    '0': '0', gameId: '0',
+                    '1': alice.address, player: alice.address,
+                    '2': '2000', amount: '2000',
+                }, // Buy-in by Alice
+                {
+                    '0': '0', gameId: '0',
+                    '1': bob.address, player: bob.address,
+                    '2': '2100', amount: '2100',
+                }, // Buy-in by Bob
+                {
+                    '0': '0', gameId: '0',
+                    '1': bob.address, player: bob.address,
+                    '2': '4050', amount: '4050'
+                } // Reward collected by Bob
+            ]);
+        });
+
+        it('fails to claim the reward of an in-progress game', async function() {
+            await deployer.sendToken(alice.address, '1000000');
+            await alice.receiveAll();
+
+            await deployer.sendToken(bob.address, '1000000');
+            await bob.receiveAll();
+
+            await contract.call('setTime', ['0'], {caller: alice});
+
+            await contract.call('createGame', ['tti_5649544520544f4b454e6e40', '15000', '18000', '2000', '100', '25', '1000'], {caller: alice, amount: '2000'});
+            
+            await contract.call('buyIn', ['0'], {caller: bob, amount: '2100'});
+
+            // Less than the new expiration time (16000), so the game is still in progress
+            await contract.call('setTime', ['15999'], {caller: alice});
+
+            expect(
+                contract.call('claimReward', ['0'], {caller: bob})
+            ).to.be.eventually.rejectedWith('revert');
         });
     });
 });
