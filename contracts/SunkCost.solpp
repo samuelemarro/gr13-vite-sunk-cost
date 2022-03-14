@@ -43,6 +43,7 @@ contract SunkCost {
     }
 
     function creator(uint256 _gameId) external view returns (address) {
+        require(exists(_gameId), "Game does not exist");
         return games[_gameId].creator;
     }
 
@@ -126,7 +127,7 @@ contract SunkCost {
         games[gameId].maxExpiration = _maxExpiration;
         games[gameId].initialBuyIn = _initialBuyIn;
         games[gameId].currentBuyIn = _initialBuyIn + _buyInIncrement;
-        // games[gameId].currentPot = 0;
+        games[gameId].currentPot = _initialBuyIn - _burnAmount;
         games[gameId].buyInIncrement = _buyInIncrement;
         games[gameId].burnAmount = _burnAmount;
         games[gameId].extension = _extension;
@@ -150,7 +151,7 @@ contract SunkCost {
         uint256 gameBurnAmount = games[_gameId].burnAmount;
         uint256 refund = msg.value - games[_gameId].currentBuyIn;
 
-        games[_gameId].currentPot += games[_gameId].currentBuyIn;
+        games[_gameId].currentPot += games[_gameId].currentBuyIn - gameBurnAmount;
         games[_gameId].currentBuyIn += games[_gameId].buyInIncrement;
 
         if (gameBurnAmount > 0) {
