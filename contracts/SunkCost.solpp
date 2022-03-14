@@ -29,48 +29,63 @@ contract SunkCost {
         return nGames;
     }
 
-    function tokenId(uint256 _index) external view returns (vitetoken) {
-        return games[_index].tokenId;
+    function exists(uint256 _gameId) public view returns (bool) {
+        return _gameId < nGames;
     }
 
-    function expiration(uint256 _index) external view returns (uint256) {
-        return games[_index].expiration;
+    function tokenId(uint256 _gameId) external view returns (vitetoken) {
+        require(exists(_gameId), "Game does not exist");
+        return games[_gameId].tokenId;
     }
 
-    function expired(uint256 _index) external view returns (bool) {
-        return games[_index].expiration < block.timestamp;
+    function expiration(uint256 _gameId) external view returns (uint256) {
+        require(exists(_gameId), "Game does not exist");
+        return games[_gameId].expiration;
     }
 
-    function initialBuyIn(uint256 _index) external view returns (uint256) {
-        return games[_index].initialBuyIn;
+    function expired(uint256 _gameId) external view returns (bool) {
+        require(exists(_gameId), "Game does not exist");
+        return games[_gameId].expiration < block.timestamp;
     }
 
-    function currentBuyIn(uint256 _index) external view returns (uint256) {
-        return games[_index].currentBuyIn;
+    function initialBuyIn(uint256 _gameId) external view returns (uint256) {
+        require(exists(_gameId), "Game does not exist");
+        return games[_gameId].initialBuyIn;
     }
 
-    function currentPot(uint256 _index) external view returns (uint256) {
-        return games[_index].currentPot;
+    function currentBuyIn(uint256 _gameId) external view returns (uint256) {
+        require(exists(_gameId), "Game does not exist");
+        return games[_gameId].currentBuyIn;
     }
 
-    function buyInIncrement(uint256 _index) external view returns (uint256) {
-        return games[_index].buyInIncrement;
+    function currentPot(uint256 _gameId) external view returns (uint256) {
+        require(exists(_gameId), "Game does not exist");
+        return games[_gameId].currentPot;
     }
 
-    function burnAmount(uint256 _index) external view returns (uint256) {
-        return games[_index].burnAmount;
+    function buyInIncrement(uint256 _gameId) external view returns (uint256) {
+        require(exists(_gameId), "Game does not exist");
+        return games[_gameId].buyInIncrement;
     }
 
-    function extension(uint256 _index) external view returns (uint256) {
-        return games[_index].extension;
+    function burnAmount(uint256 _gameId) external view returns (uint256) {
+        require(exists(_gameId), "Game does not exist");
+        return games[_gameId].burnAmount;
     }
 
-    function currentWinner(uint256 _index) external view returns (address) {
-        return games[_index].currentWinner;
+    function extension(uint256 _gameId) external view returns (uint256) {
+        require(exists(_gameId), "Game does not exist");
+        return games[_gameId].extension;
     }
 
-    function claimed(uint256 _index) external view returns (bool) {
-        return games[_index].claimed;
+    function currentWinner(uint256 _gameId) external view returns (address) {
+        require(exists(_gameId), "Game does not exist");
+        return games[_gameId].currentWinner;
+    }
+
+    function claimed(uint256 _gameId) external view returns (bool) {
+        require(exists(_gameId), "Game does not exist");
+        return games[_gameId].claimed;
     }
 
     // ==Game Management==
@@ -98,9 +113,10 @@ contract SunkCost {
     }
 
     function buy(uint256 _gameId) public payable {
+        require(exists(_gameId), "Game does not exist");
         require(games[_gameId].expiration > block.timestamp, "Game is expired");
-        require(msg.token == games[_gameId].tokenId);
-        require(msg.value == games[_gameId].currentBuyIn);
+        require(msg.token == games[_gameId].tokenId, "Token ID mismatch");
+        require(msg.value == games[_gameId].currentBuyIn, "Transaction value should cover current buy-in");
 
         games[_gameId].currentPot += games[_gameId].currentBuyIn;
         games[_gameId].currentBuyIn += games[_gameId].buyInIncrement;
@@ -114,6 +130,7 @@ contract SunkCost {
     }
 
     function claimReward(uint256 _gameId) public {
+        require(exists(_gameId), "Game does not exist");
         require(games[_gameId].expiration <= block.timestamp, "Game is not over yet");
         require(msg.sender == games[_gameId].currentWinner, "Sender must be winner");
         require(!games[_gameId].claimed, "Reward has already been claimed");
