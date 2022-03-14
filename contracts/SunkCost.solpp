@@ -30,7 +30,7 @@ contract SunkCost {
     mapping(uint256 => Game) public games;
     uint256 private nGames = 0;
 
-    address public constant BURN_ADDRESS = "vite_00000000000000000000000000000000000000000000000000";
+    address public constant BURN_ADDRESS = "vite_0000000000000000000000000000000000000000a4f3a0cb58";
 
     // ==Getters==
 
@@ -146,12 +146,15 @@ contract SunkCost {
         require(exists(_gameId), "Game does not exist");
         require(games[_gameId].expiration > block.timestamp, "Game is expired");
         require(msg.token == games[_gameId].tokenId, "Token ID mismatch");
-        require(msg.value == games[_gameId].currentBuyIn, "Transaction value should cover current buy-in");
+
+        uint256 gameBuyIn = games[_gameId].currentBuyIn;
+
+        require(msg.value == gameBuyIn, "Transaction value should cover current buy-in");
 
         uint256 gameBurnAmount = games[_gameId].burnAmount;
-        uint256 refund = msg.value - games[_gameId].currentBuyIn;
+        uint256 refund = msg.value - gameBuyIn;
 
-        games[_gameId].currentPot += games[_gameId].currentBuyIn - gameBurnAmount;
+        games[_gameId].currentPot += gameBuyIn - gameBurnAmount;
         games[_gameId].currentBuyIn += games[_gameId].buyInIncrement;
 
         if (gameBurnAmount > 0) {
@@ -173,7 +176,7 @@ contract SunkCost {
             payable(msg.sender).transfer(games[_gameId].tokenId, refund);
         }
 
-        emit BuyIn(_gameId, msg.sender, games[_gameId].currentBuyIn);
+        emit BuyIn(_gameId, msg.sender, gameBuyIn);
     }
 
     function claimReward(uint256 _gameId) external {
