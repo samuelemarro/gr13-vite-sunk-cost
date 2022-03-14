@@ -296,7 +296,7 @@ describe('test SunkCost', function () {
             ).to.eventually.be.rejectedWith('revert');
         });
 
-        it.only('fails to pay a createGame call with the wrong token', async function() {
+        it('fails to pay a createGame call with the wrong token', async function() {
             await deployer.sendToken(alice.address, '1000000');
             await alice.receiveAll();
 
@@ -307,9 +307,12 @@ describe('test SunkCost', function () {
             ).to.eventually.be.rejectedWith('revert');
         });
 
-        it.only('fails to create a game in the past', async function() {
+        it('fails to create a game in the past', async function() {
             await deployer.sendToken(alice.address, '1000000');
             await alice.receiveAll();
+
+            // Timestamp starts at 0 with vuilter
+            vite.utils.sleep(1000);
 
             // 1 = January 1, 1970 00:00:01
             // 2215292400 = March 14, 2040
@@ -318,7 +321,7 @@ describe('test SunkCost', function () {
             ).to.eventually.be.rejectedWith('revert');
         });
 
-        it.only('fails to create a game with maxExpiration < expiration', async function() {
+        it('fails to create a game with maxExpiration < expiration', async function() {
             await deployer.sendToken(alice.address, '1000000');
             await alice.receiveAll();
 
