@@ -139,18 +139,24 @@ contract SunkCost {
         require(msg.token == games[_gameId].tokenId, "Token ID mismatch");
         require(msg.value == games[_gameId].currentBuyIn, "Transaction value should cover current buy-in");
 
+        uint256 gameBurnAmount = games[_gameId].burnAmount;
+        uint256 refund = msg.value - games[_gameId].currentBuyIn;
+
         games[_gameId].currentPot += games[_gameId].currentBuyIn;
         games[_gameId].currentBuyIn += games[_gameId].buyInIncrement;
 
-        // TODO: Handle frontrunning
-
-        uint256 gameBurnAmount = games[_gameId].burnAmount;
         if (gameBurnAmount > 0) {
             _burn(games[_gameId].tokenId, gameBurnAmount);
         }
+
         games[_gameId].expiration += games[_gameId].extension;
 
         games[_gameId].currentWinner = msg.sender;
+
+        if (refund > 0) {
+            // Buyer overpaid (e.g. to handle frontrunning), refund the difference
+            payable(msg.sender).transfer(games[_gameId].tokenId, refund);
+        }
 
         emit BuyIn(_gameId, msg.sender, games[_gameId].currentBuyIn);
     }
@@ -163,6 +169,7 @@ contract SunkCost {
 
         games[_gameId].claimed = true;
 
+        // Tokens are sent last to prevent re-entrancy attacks
         payable(msg.sender).transfer(games[_gameId].tokenId, games[_gameId].currentPot);
 
         emit RewardCollected(_gameId, msg.sender, games[_gameId].currentPot);
