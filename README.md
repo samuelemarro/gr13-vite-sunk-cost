@@ -1,12 +1,10 @@
-# Vite Sunk Cost Game contract
+# GR13 Hackathon - Vite Sunk Cost Game contract
 
-# GR13 Hackathon - Vite Creator Token Contract
-
-This contract is my submission to GitCoin's Round 13 Hackathon "Creator Token Platform" bounty.
+This contract is my submission to GitCoin's Round 13 Hackathon "Sunk Cost Game" bounty.
 
 ## Installing
 
-`git clone https://github.com/samuelemarro/gr13-vite-creator-token`
+`git clone https://github.com/samuelemarro/gr13-vite-sunk-cost`
 
 ## Running
 
