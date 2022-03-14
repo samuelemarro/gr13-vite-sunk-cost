@@ -1,0 +1,124 @@
+// SPDX-License-Identifier: MIT
+/// @title Sunk Cost Game implementation for GR13 Hackathon
+/// @author Samuele Marro
+
+pragma soliditypp ^0.8.0;
+
+struct Game {
+    vitetoken tokenId;
+    uint256 expiration;
+    uint256 initialBuyIn;
+    uint256 currentBuyIn;
+    uint256 currentPot;
+    uint256 buyInIncrement;
+    uint256 burnAmount;
+    uint256 extension;
+
+    address currentWinner;
+
+    bool claimed;
+}
+
+contract SunkCost {
+    mapping(uint256 => Game) public games;
+    uint256 private nGames = 0;
+
+    // ==Getters==
+
+    function numGames() public view returns (uint256) {
+        return nGames;
+    }
+
+    function tokenId(uint256 _index) external view returns (vitetoken) {
+        return games[_index].tokenId;
+    }
+
+    function expiration(uint256 _index) external view returns (uint256) {
+        return games[_index].expiration;
+    }
+
+    function expired(uint256 _index) external view returns (bool) {
+        return games[_index].expiration < block.timestamp;
+    }
+
+    function initialBuyIn(uint256 _index) external view returns (uint256) {
+        return games[_index].initialBuyIn;
+    }
+
+    function currentBuyIn(uint256 _index) external view returns (uint256) {
+        return games[_index].currentBuyIn;
+    }
+
+    function currentPot(uint256 _index) external view returns (uint256) {
+        return games[_index].currentPot;
+    }
+
+    function buyInIncrement(uint256 _index) external view returns (uint256) {
+        return games[_index].buyInIncrement;
+    }
+
+    function burnAmount(uint256 _index) external view returns (uint256) {
+        return games[_index].burnAmount;
+    }
+
+    function extension(uint256 _index) external view returns (uint256) {
+        return games[_index].extension;
+    }
+
+    function currentWinner(uint256 _index) external view returns (address) {
+        return games[_index].currentWinner;
+    }
+
+    function claimed(uint256 _index) external view returns (bool) {
+        return games[_index].claimed;
+    }
+
+    // ==Game Management==
+
+    function createGame(vitetoken _tokenId, uint256 _expiration, uint256 _initialBuyIn, uint256 _buyInIncrement, uint256 _burnAmount, uint256 _extension) external payable {
+        require(_expiration > block.timestamp, "Game cannot end in the past");
+        require(msg.token == _tokenId, "Token ID mismatch");
+        require(msg.value == _initialBuyIn, "Transaction value should cover initial buy-in");
+
+        uint256 gameId = nGames;
+
+        games[gameId].tokenId = _tokenId;
+        games[gameId].expiration = _expiration;
+        games[gameId].initialBuyIn = _initialBuyIn;
+        games[gameId].currentBuyIn = _initialBuyIn + _buyInIncrement;
+        // games[gameId].currentPot = 0;
+        games[gameId].buyInIncrement = _buyInIncrement;
+        games[gameId].burnAmount = _burnAmount;
+        games[gameId].extension = _extension;
+        games[gameId].currentWinner = msg.sender;
+        // games[gameId].claimed = false;
+        nGames++;
+
+        // TODO: burnAmount
+    }
+
+    function buy(uint256 _gameId) public payable {
+        require(games[_gameId].expiration > block.timestamp, "Game is expired");
+        require(msg.token == games[_gameId].tokenId);
+        require(msg.value == games[_gameId].currentBuyIn);
+
+        games[_gameId].currentPot += games[_gameId].currentBuyIn;
+        games[_gameId].currentBuyIn += games[_gameId].buyInIncrement;
+
+        // TODO: Handle frontrunning
+
+        // TODO: burnAmount
+        games[_gameId].expiration += games[_gameId].extension;
+
+        games[_gameId].currentWinner = msg.sender;
+    }
+
+    function claimReward(uint256 _gameId) public {
+        require(games[_gameId].expiration <= block.timestamp, "Game is not over yet");
+        require(msg.sender == games[_gameId].currentWinner, "Sender must be winner");
+        require(!games[_gameId].claimed, "Reward has already been claimed");
+
+        payable(msg.sender).transfer(games[_gameId].tokenId, games[_gameId].currentPot);
+        games[_gameId].claimed = true;
+    }
+}
