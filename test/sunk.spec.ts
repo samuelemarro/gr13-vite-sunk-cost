@@ -324,8 +324,10 @@ describe('test SunkCost', function () {
 
             // 1899673200 = March 14, 2030
             // 2215292400 = March 14, 2040
+
+            // tti_564954455820434f494e69b5 is ViteX
             expect(
-                contract.call('createGame', ['tti_5649544520544f4b454e6e41', '1899673200', '2215292400', '2000', '100', '25', '1000'], {caller: alice, amount: '2000'})
+                contract.call('createGame', ['tti_564954455820434f494e69b5', '1899673200', '2215292400', '2000', '100', '25', '1000'], {caller: alice, amount: '2000'})
             ).to.eventually.be.rejectedWith('revert');
         });
 
