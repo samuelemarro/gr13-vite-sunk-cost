@@ -70,7 +70,7 @@ contract SunkCost {
     ///
     /// @param _gameId The id of the game
     function creator(uint256 _gameId) external view returns (address) {
-        require(exists(_gameId), "Game does not exist");
+        require(exists(_gameId), "SunkCost: game does not exist");
         return games[_gameId].creator;
     }
 
@@ -78,7 +78,7 @@ contract SunkCost {
     ///
     /// @param _gameId The id of the game
     function tokenId(uint256 _gameId) external view returns (vitetoken) {
-        require(exists(_gameId), "Game does not exist");
+        require(exists(_gameId), "SunkCost: game does not exist");
         return games[_gameId].tokenId;
     }
 
@@ -86,7 +86,7 @@ contract SunkCost {
     ///
     /// @param _gameId The id of the game
     function expiration(uint256 _gameId) external view returns (uint256) {
-        require(exists(_gameId), "Game does not exist");
+        require(exists(_gameId), "SunkCost: game does not exist");
         return games[_gameId].expiration;
     }
 
@@ -94,7 +94,7 @@ contract SunkCost {
     ///
     /// @param _gameId The id of the game
     function maxExpiration(uint256 _gameId) external view returns (uint256) {
-        require(exists(_gameId), "Game does not exist");
+        require(exists(_gameId), "SunkCost: game does not exist");
         return games[_gameId].maxExpiration;
     }
 
@@ -102,7 +102,7 @@ contract SunkCost {
     ///
     /// @param _gameId The id of the game to check
     function expired(uint256 _gameId) external view returns (bool) {
-        require(exists(_gameId), "Game does not exist");
+        require(exists(_gameId), "SunkCost: game does not exist");
         return games[_gameId].expiration < _getTime();
     }
 
@@ -110,7 +110,7 @@ contract SunkCost {
     ///
     /// @param _gameId The id of the game
     function initialBuyIn(uint256 _gameId) external view returns (uint256) {
-        require(exists(_gameId), "Game does not exist");
+        require(exists(_gameId), "SunkCost: game does not exist");
         return games[_gameId].initialBuyIn;
     }
 
@@ -118,7 +118,7 @@ contract SunkCost {
     ///
     /// @param _gameId The id of the game
     function currentBuyIn(uint256 _gameId) external view returns (uint256) {
-        require(exists(_gameId), "Game does not exist");
+        require(exists(_gameId), "SunkCost: game does not exist");
         return games[_gameId].currentBuyIn;
     }
 
@@ -126,7 +126,7 @@ contract SunkCost {
     ///
     /// @param _gameId The id of the game
     function currentPot(uint256 _gameId) external view returns (uint256) {
-        require(exists(_gameId), "Game does not exist");
+        require(exists(_gameId), "SunkCost: game does not exist");
         return games[_gameId].currentPot;
     }
 
@@ -134,7 +134,7 @@ contract SunkCost {
     ///
     /// @param _gameId The id of the game
     function buyInIncrement(uint256 _gameId) external view returns (uint256) {
-        require(exists(_gameId), "Game does not exist");
+        require(exists(_gameId), "SunkCost: game does not exist");
         return games[_gameId].buyInIncrement;
     }
 
@@ -142,7 +142,7 @@ contract SunkCost {
     ///
     /// @param _gameId The id of the game
     function burnAmount(uint256 _gameId) external view returns (uint256) {
-        require(exists(_gameId), "Game does not exist");
+        require(exists(_gameId), "SunkCost: game does not exist");
         return games[_gameId].burnAmount;
     }
 
@@ -150,7 +150,7 @@ contract SunkCost {
     ///
     /// @param _gameId The id of the game
     function extension(uint256 _gameId) external view returns (uint256) {
-        require(exists(_gameId), "Game does not exist");
+        require(exists(_gameId), "SunkCost: game does not exist");
         return games[_gameId].extension;
     }
 
@@ -158,7 +158,7 @@ contract SunkCost {
     ///
     /// @param _gameId The id of the game
     function currentWinner(uint256 _gameId) external view returns (address) {
-        require(exists(_gameId), "Game does not exist");
+        require(exists(_gameId), "SunkCost: game does not exist");
         return games[_gameId].currentWinner;
     }
 
@@ -166,7 +166,7 @@ contract SunkCost {
     ///
     /// @param _gameId The id of the game
     function claimed(uint256 _gameId) external view returns (bool) {
-        require(exists(_gameId), "Game does not exist");
+        require(exists(_gameId), "SunkCost: game does not exist");
         return games[_gameId].claimed;
     }
 
@@ -186,10 +186,10 @@ contract SunkCost {
     /// @param _burnAmount The amount burned with each buy-in of the game
     /// @param _extension The added time with each buy-in of the game
     function createGame(vitetoken _tokenId, uint256 _expiration, uint256 _maxExpiration, uint256 _initialBuyIn, uint256 _buyInIncrement, uint256 _burnAmount, uint256 _extension) external payable {
-        require(_expiration > _getTime(), "Game cannot end in the past");
-        require(msg.token == _tokenId, "Token ID mismatch");
-        require(msg.value == _initialBuyIn, "Transaction value should cover initial buy-in");
-        require(_maxExpiration >= _expiration, "Max expiration must be greater than or equal to expiration");
+        require(_expiration > _getTime(), "SunkCost: game cannot end in the past");
+        require(msg.token == _tokenId, "SunkCost: token ID mismatch");
+        require(msg.value == _initialBuyIn, "SunkCost: transaction value should cover initial buy-in");
+        require(_maxExpiration >= _expiration, "SunkCost: max expiration must be greater than or equal to expiration");
 
         uint256 gameId = nGames;
 
@@ -219,14 +219,14 @@ contract SunkCost {
     ///
     /// @param _gameId The id of the game
     function buyIn(uint256 _gameId) external payable {
-        require(exists(_gameId), "Game does not exist");
-        require(games[_gameId].expiration > _getTime(), "Game is expired");
-        require(msg.token == games[_gameId].tokenId, "Token ID mismatch");
+        require(exists(_gameId), "SunkCost: game does not exist");
+        require(games[_gameId].expiration > _getTime(), "SunkCost: game is expired");
+        require(msg.token == games[_gameId].tokenId, "SunkCost: token ID mismatch");
 
         uint256 gameBuyIn = games[_gameId].currentBuyIn;
 
         // Note: can be greater than gameBuyIn
-        require(msg.value >= gameBuyIn, "Transaction value should cover current buy-in");
+        require(msg.value >= gameBuyIn, "SunkCost: transaction value should cover current buy-in");
 
         uint256 gameBurnAmount = games[_gameId].burnAmount;
         uint256 refund = msg.value - gameBuyIn;
@@ -260,10 +260,10 @@ contract SunkCost {
     ///
     /// @param _gameId The id of the game
     function claimReward(uint256 _gameId) external {
-        require(exists(_gameId), "Game does not exist");
-        require(games[_gameId].expiration < _getTime(), "Game is not over yet");
-        require(msg.sender == games[_gameId].currentWinner, "Sender must be winner");
-        require(!games[_gameId].claimed, "Reward has already been claimed");
+        require(exists(_gameId), "SunkCost: game does not exist");
+        require(games[_gameId].expiration < _getTime(), "SunkCost: game is not over yet");
+        require(msg.sender == games[_gameId].currentWinner, "SunkCost: sender must be winner");
+        require(!games[_gameId].claimed, "SunkCost: reward has already been claimed");
 
         games[_gameId].claimed = true;
 
