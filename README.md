@@ -7,6 +7,7 @@ This contract is my submission to GitCoin's Round 13 Hackathon "Sunk Cost Game" 
 - Customizable expiration increase
 - Burn x tokens every time a player joins
 - Increase the price every time a player joins
+- Getters for UIs
 
 ## Installing
 
