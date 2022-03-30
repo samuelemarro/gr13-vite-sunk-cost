@@ -2,6 +2,12 @@
 
 This contract is my submission to GitCoin's Round 13 Hackathon "Sunk Cost Game" bounty.
 
+## Features
+
+- Customizable expiration increase
+- Burn x tokens every time a player joins
+- Increase the price every time a player joins
+
 ## Installing
 
 `git clone https://github.com/samuelemarro/gr13-vite-sunk-cost`
